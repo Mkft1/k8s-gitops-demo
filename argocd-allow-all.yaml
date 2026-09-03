@@ -1,0 +1,14 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: argocd-allow-all
+  namespace: argocd
+spec:
+  podSelector: {}  # Применяем ко всем подам в argocd
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - {}  # Разрешаем весь входящий трафик
+  egress:
+  - {}  # Разрешаем весь исходящий трафик (включая скачивание образов)
