@@ -15,13 +15,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      # 1. GITLEAKS
+      # 1. GITLEAKS: Ищем утечки секретов (работает без токена для базовой проверки)
       - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 2. DATREE (рендерим Helm, потом проверяем)
+      # 2. KUBE-LINTER: Проверка best practices K8s (100% Open Source, без токенов!)
       - name: Install Helm
         uses: azure/setup-helm@v4
         with:
@@ -30,13 +30,16 @@ jobs:
       - name: Render Helm templates
         run: helm template my-app charts/nginx-app > rendered-manifests.yaml
 
-      - name: Run Datree on rendered manifests
-        uses: datreeio/action-datree@main
-        with:
-          path: 'rendered-manifests.yaml'
-          cliArguments: '--only-k8s-files'
+      - name: Run Kube-linter
+        run: |
+          # Скачиваем последнюю версию kube-linter напрямую с GitHub Releases
+          curl -L -o kube-linter https://github.com/stackrox/kube-linter/releases/latest/download/kube-linter-linux
+          chmod +x kube-linter
+          
+          # Запускаем проверку. Если найдены ошибки, он вернет код 1 и упадет пайплайн
+          ./kube-linter lint rendered-manifests.yaml
 
-      # 3. TRIVY
+      # 3. TRIVY: Сканирование конфигураций на CVE (также полностью Open Source)
       - name: Run Trivy config scan
         uses: aquasecurity/trivy-action@master
         with:
