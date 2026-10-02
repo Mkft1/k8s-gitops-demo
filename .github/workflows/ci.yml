@@ -13,26 +13,34 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Нужно для gitleaks, чтобы проверить всю историю
+          fetch-depth: 0
 
-      # 1. GITLEAKS: случайно закоммиченные секреты (пароли, токены)
+      # 1. GITLEAKS
       - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 2. DATREE:проверка Kubernetes манифестов на лучшие практики (например, наличие resources.limits)
-      - name: Run Datree
+      # 2. DATREE (рендерим Helm, потом проверяем)
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: 'v3.15.0'
+
+      - name: Render Helm templates
+        run: helm template my-app charts/nginx-app > rendered-manifests.yaml
+
+      - name: Run Datree on rendered manifests
         uses: datreeio/action-datree@main
         with:
-          path: 'charts/nginx-app/templates/*.yaml'
+          path: 'rendered-manifests.yaml'
           cliArguments: '--only-k8s-files'
 
-      # 3. TRIVY: скан Helm-чарт на известные уязвимости конфигурации (CVE)
+      # 3. TRIVY
       - name: Run Trivy config scan
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'config'
           scan-ref: 'charts/nginx-app/'
           severity: 'CRITICAL,HIGH'
-          exit-code: '1' # Заставляет пайплайн упасть, если найдены HIGH/CRITICAL уязвимости
+          exit-code: '1'
