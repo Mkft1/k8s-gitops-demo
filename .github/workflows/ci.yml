@@ -47,3 +47,4 @@ jobs:
           scan-ref: 'charts/nginx-app/'
           severity: 'CRITICAL,HIGH'
           exit-code: '1'
+# Force trigger new pipeline
