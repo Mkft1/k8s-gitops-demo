@@ -35,3 +35,24 @@ affinity: {}
 # Добавляем блок autoscaling (не используем HPA, но Helm требует его)
 autoscaling:
   enabled: false
+
+# Безопасность контейнера (исправляем no-read-only-root-fs и run-as-non-root)
+securityContext:
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 101               # UID пользователя nginx в alpine образе
+  allowPrivilegeEscalation: false
+
+# Высокая доступность (исправляем no-anti-affinity)
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      podAffinityTerm:
+        labelSelector:
+          matchExpressions:
+          - key: app.kubernetes.io/name
+            operator: In
+            values:
+            - nginx-app
+        topologyKey: kubernetes.io/hostname
