@@ -6,7 +6,7 @@ replicaCount: 2
 image:
   repository: nginx
   pullPolicy: IfNotPresent
-  tag: "1.25.3-alpine" # Используем alpine, он легче и безопаснее
+  tag: "1.25.3-alpine" 
 
 imagePullSecrets: []
 nameOverride: ""
@@ -18,7 +18,7 @@ service:
   port: 80
   targetPort: 80
 
-# Ресурсы (КРИТИЧНО для Middle-уровня! Datree будет это проверять)
+# Ресурсы
 resources:
   limits:
     cpu: 200m
@@ -27,7 +27,7 @@ resources:
     cpu: 100m
     memory: 64Mi
 
-# Настройки NodeSelector, Tolerations, Affinity оставляем пустыми для простоты
+# Настройки NodeSelector, Tolerations, Affinity 
 nodeSelector: {}
 tolerations: []
 affinity:
@@ -43,7 +43,6 @@ affinity:
             - nginx-app
         topologyKey: kubernetes.io/hostname
 
-# Добавляем блок autoscaling
 autoscaling:
   enabled: false
 
