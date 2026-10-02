@@ -4,7 +4,7 @@
 replicaCount: 2
 
 image:
-  repository: nginx
+  repository: nginx/nginx-unprivileged
   pullPolicy: IfNotPresent
   tag: "1.25.3-alpine" 
 
@@ -16,7 +16,7 @@ fullnameOverride: ""
 service:
   type: ClusterIP
   port: 80
-  targetPort: 80
+  targetPort: 8080
 
 # Ресурсы
 resources:
@@ -32,16 +32,14 @@ nodeSelector: {}
 tolerations: []
 affinity:
   podAntiAffinity:
-    preferredDuringSchedulingIgnoredDuringExecution:
-    - weight: 100
-      podAffinityTerm:
-        labelSelector:
-          matchExpressions:
-          - key: app.kubernetes.io/name
-            operator: In
-            values:
-            - nginx-app
-        topologyKey: kubernetes.io/hostname
+    requiredDuringSchedulingIgnoredDuringExecution:
+    - labelSelector:
+        matchExpressions:
+        - key: app.kubernetes.io/name
+          operator: In
+          values:
+          - nginx-app  # Убедитесь, что это совпадает с именем вашего чарта в Chart.yaml
+      topologyKey: kubernetes.io/hostname
 
 autoscaling:
   enabled: false
