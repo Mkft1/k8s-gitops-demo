@@ -1,24 +1,20 @@
-# charts/nginx-app/values.yaml
-
-# Настройки приложения
 replicaCount: 2
 
 image:
-  repository: nginx/nginx-unprivileged
+  # Используем unprivileged версию, так как обычный nginx под пользователем 101 не запустится
+  repository: nginxinc/nginx-unprivileged
   pullPolicy: IfNotPresent
-  tag: "1.25.3-alpine" 
+  tag: "1.25-alpine"
 
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
-# Настройки сервиса
 service:
   type: ClusterIP
   port: 80
-  targetPort: 8080
+  targetPort: 8080 # unprivileged nginx по умолчанию слушает порт 8080
 
-# Ресурсы
 resources:
   limits:
     cpu: 200m
@@ -27,9 +23,10 @@ resources:
     cpu: 100m
     memory: 64Mi
 
-# Настройки NodeSelector, Tolerations, Affinity 
 nodeSelector: {}
 tolerations: []
+
+# 3. Исправляем no-anti-affinity: подвязываем под точный селектор Helm
 affinity:
   podAntiAffinity:
     requiredDuringSchedulingIgnoredDuringExecution:
@@ -38,16 +35,14 @@ affinity:
         - key: app.kubernetes.io/name
           operator: In
           values:
-          - nginx-app  # Убедитесь, что это совпадает с именем вашего чарта в Chart.yaml
+          - nginx-app  # Значение должно совпадать с названием вашего чарта (Chart.name)
       topologyKey: kubernetes.io/hostname
 
 autoscaling:
   enabled: false
 
-# Безопасность контейнера
 securityContext:
   readOnlyRootFilesystem: true
   runAsNonRoot: true
-  runAsUser: 101               # UID пользователя nginx в alpine образе
+  runAsUser: 101
   allowPrivilegeEscalation: false
-

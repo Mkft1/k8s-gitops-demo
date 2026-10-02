@@ -17,11 +17,12 @@ spec:
         app.kubernetes.io/name: {{ include "nginx-app.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
-      # контекст безопасности на уровне всего Пода 
-     securityContext:
+      # 1. Исправляем run-as-non-root: гарантируем некорневой запуск на уровне Пода
+      securityContext:
         runAsNonRoot: true
         runAsUser: 101
         fsGroup: 101
+
       {{- with .Values.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
@@ -40,7 +41,7 @@ spec:
         {{- end }}
         resources:
           {{- toYaml .Values.resources | nindent 12 }}
-        #  временнaz память для логов и кэша Nginx
+        # 2. Исправляем no-read-only-root-fs: монтируем RAM-диски для логов/кэша Nginx
         volumeMounts:
         - mountPath: /var/cache/nginx
           name: nginx-tmp
@@ -48,7 +49,7 @@ spec:
           name: nginx-tmp
         - mountPath: /tmp
           name: nginx-tmp
-      #  emptyDir том
+      
       volumes:
       - name: nginx-tmp
         emptyDir: {}

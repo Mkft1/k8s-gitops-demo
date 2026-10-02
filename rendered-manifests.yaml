@@ -1,0 +1,105 @@
+---
+# Source: nginx-app/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-app-nginx-app
+  labels:
+    app.kubernetes.io/name: nginx-app
+    app.kubernetes.io/instance: my-app
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  selector:
+    app.kubernetes.io/name: nginx-app
+    app.kubernetes.io/instance: my-app
+---
+# Source: nginx-app/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app-nginx-app
+  labels:
+    app.kubernetes.io/name: nginx-app
+    app.kubernetes.io/instance: my-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: nginx-app
+      app.kubernetes.io/instance: my-app
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: nginx-app
+        app.kubernetes.io/instance: my-app
+    spec:
+      # 1. Исправляем run-as-non-root: гарантируем некорневой запуск на уровне Пода
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        fsGroup: 101
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                - nginx-app
+            topologyKey: kubernetes.io/hostname
+      containers:
+      - name: nginx-app
+        image: "nginxinc/nginx-unprivileged:1.25-alpine"
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 101
+        resources:
+            limits:
+              cpu: 200m
+              memory: 128Mi
+            requests:
+              cpu: 100m
+              memory: 64Mi
+        # 2. Исправляем no-read-only-root-fs: монтируем RAM-диски для логов/кэша Nginx
+        volumeMounts:
+        - mountPath: /var/cache/nginx
+          name: nginx-tmp
+        - mountPath: /var/run
+          name: nginx-tmp
+        - mountPath: /tmp
+          name: nginx-tmp
+      
+      volumes:
+      - name: nginx-tmp
+        emptyDir: {}
+---
+# Source: nginx-app/templates/sealed-secret.yaml
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  creationTimestamp: null
+  name: nginx-app-db-secret
+  namespace: production
+spec:
+  encryptedData:
+    db-password: AgAzYkRMREZtA4dHhu2hCP2RSirlx7ZD9JCfKQ3PIklwToi67D9C34bmqHjf9AIJjBdLAmIYK9RyUOdLHc8trTyJqN+tyKErvqv+9FGWTIFCiuDZPvpjQkqRcR9aF92BDml2WiY0uwpORpwA7PGqSbUY4mCJSJitlq7OyucywOBGAqjOrkAZCrrNADGQQSkJVY1sK1+6hn52Aki+lhnkPB1BtMUN7OtrHsp4dcVwBuUTaxz1SlhxBTZFGRXbNli3gg2qxe2CKMQqWuqQSW2I2ETZJw/DpM/yWcbPadmycq3msvKMkTffjGBDbgMks7NuatE219Tyw0T2pmHl44FR53c1nWR1XQGGRRD2nIrhZDr7LXBtiYT9ppgeQamCOArOxdNp3A2JWvcCmUGQ07W5DsosQYxQegQLfxJoHUfLbHUZPC1s0kBmXKaTGtiSNgD/6WMffFPh18lPwiMuV6ADyKlCUOYQvT5sOz/NQcCjNeMLbH1F0hOzmtf5jKqJ/alsShlHh8hQlo9MqfFnYvUHAbGR+HwB5bWeE6C6geZf1paHlv7OSuIs28/4od/fGhxVHIUg59JSoLJ+1q+RRPei2fAw4d3bEwHqT68MlOrh4sqZObVbY4xe8JDF8+vpGEHgv9DqvON7aEwxzvC2NWqyXv/U+GB83Nreulos5cSjMVIl+/Il51qdDI/rhTLck/LV+XGlVP3yYAnt+v8nmjx6J2N9/Vx5BMEgG0xN
+    db-user: AgDNdNBPO2uBs/IUpOk0UvDq3Pj84TkwN+yjB5E5ME89XjpJIPYnmVWhlDpMVp0jJJtki80zxUE3yzdy4zCtJpg5xdJwFDCBxzbglz/JXImW+IT5Yxmp4AfEQFVypSRClGrX4SeeGQMRgWJvtnXSrqnNdgRgYTIow0gCMR13ulMJy33FA1EIUPG+20ooQDHj+BwhuW0Zgc+KdfjuvQpQAhWgQYk7uMuvcPscFUV9Vnp5sVDIcn85Oj7Dc6a9cwtvhyf9YY5uC9VxMEvlSoB7ejPJnOllT1BsPwI7jVmKT1B8mOd7O5F9Rt1Mr/yps/feMfarygBeKwDOFDY6FEv5fQKlR+vrJX2UnhgwDeNU0s4lMgftYJNXkpHCE0TTxK4D8rKyWimi3+6HS4ST4N9Eh6Bc//+cT/EkEVjbPjjh/n4F6VzQ0SmMr1tZuINyAXbkHqtn0ps/xYbwaJb42O5oWc27I2G0i+LaOhBRa7d0xYxIm8h63NwPI5CauFaPaRwHWq+Qcipn0kNGA1bkljtJSMel9YbMCQmx4Q+m1iRwQyKeS4QXN8nX8Z1mdcbOa7MZDMiQVxnp4OvcJD+8I5oujlPGrvdSpeFqoEc32ZXPx45LYKMwRSRT4q7cDAciZBJ9UbVWbhtUGbDmn6TZpsuKGdfw+Qn4tT6AuFoa8lPSNevWv/8w7O6w5X889xKsf8UVxwasUl1XkQ==
+  template:
+    metadata:
+      creationTimestamp: null
+      name: nginx-app-db-secret
+      namespace: production
+    type: Opaque
