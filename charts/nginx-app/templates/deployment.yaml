@@ -17,6 +17,11 @@ spec:
         app.kubernetes.io/name: {{ include "nginx-app.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
+      # контекст безопасности на уровне всего Пода 
+     securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        fsGroup: 101
       {{- with .Values.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
@@ -35,3 +40,15 @@ spec:
         {{- end }}
         resources:
           {{- toYaml .Values.resources | nindent 12 }}
+        #  временнaz память для логов и кэша Nginx
+        volumeMounts:
+        - mountPath: /var/cache/nginx
+          name: nginx-tmp
+        - mountPath: /var/run
+          name: nginx-tmp
+        - mountPath: /tmp
+          name: nginx-tmp
+      #  emptyDir том
+      volumes:
+      - name: nginx-tmp
+        emptyDir: {}
