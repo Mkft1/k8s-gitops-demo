@@ -30,20 +30,6 @@ resources:
 # Настройки NodeSelector, Tolerations, Affinity оставляем пустыми для простоты
 nodeSelector: {}
 tolerations: []
-affinity: {}
-
-# Добавляем блок autoscaling (не используем HPA, но Helm требует его)
-autoscaling:
-  enabled: false
-
-# Безопасность контейнера (исправляем no-read-only-root-fs и run-as-non-root)
-securityContext:
-  readOnlyRootFilesystem: true
-  runAsNonRoot: true
-  runAsUser: 101               # UID пользователя nginx в alpine образе
-  allowPrivilegeEscalation: false
-
-# Высокая доступность (исправляем no-anti-affinity)
 affinity:
   podAntiAffinity:
     preferredDuringSchedulingIgnoredDuringExecution:
@@ -56,3 +42,15 @@ affinity:
             values:
             - nginx-app
         topologyKey: kubernetes.io/hostname
+
+# Добавляем блок autoscaling
+autoscaling:
+  enabled: false
+
+# Безопасность контейнера
+securityContext:
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 101               # UID пользователя nginx в alpine образе
+  allowPrivilegeEscalation: false
+
