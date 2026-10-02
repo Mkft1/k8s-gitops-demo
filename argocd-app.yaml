@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/Mkft1/k8s-gitops-demo.git
+    repoURL: https://github.com/Mkft1/k8s-gitops-demo.git 
     targetRevision: HEAD
     path: charts/nginx-app
     helm:
@@ -17,7 +17,7 @@ spec:
     namespace: production
   syncPolicy:
     automated:
-      prune: true   
-      selfHeal: true 
+      prune: true    # Удалять ресурсы, которых нет в Git
+      selfHeal: true # Автоматически исправлять ручные изменения
     syncOptions:
     - CreateNamespace=true
