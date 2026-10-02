@@ -5,6 +5,7 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   security-checks:
@@ -15,13 +16,17 @@ jobs:
         with:
           fetch-depth: 0
 
-      # 1. GITLEAKS: Ищем утечки секретов (работает без токена для базовой проверки)
+      # ДЕТЕКТОР ЛЖИ 1: Показываем, какой коммит мы реально проверяем
+      - name: Show current commit
+        run: |
+          echo "Checking out commit: $(git rev-parse HEAD)"
+          git log -1 --oneline
+
       - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 2. KUBE-LINTER: Проверка best practices K8s (100% Open Source, без токенов!)
       - name: Install Helm
         uses: azure/setup-helm@v4
         with:
@@ -30,16 +35,21 @@ jobs:
       - name: Render Helm templates
         run: helm template my-app charts/nginx-app > rendered-manifests.yaml
 
+      # ДЕТЕКТОР ЛЖИ 2: Показываем, что именно увидел Helm на сервере GitHub
+      - name: Debug rendered manifests
+        run: |
+          echo "--- ПЕРВЫЕ 60 СТРОК RENDERED MANIFEST ---"
+          head -n 60 rendered-manifests.yaml
+          echo "--- КОНЕЦ ПРЕВЬЮ ---"
+          echo "Проверяем наличие securityContext:"
+          grep -i "securityContext" rendered-manifests.yaml || echo "НЕ НАЙДЕНО!"
+
       - name: Run Kube-linter
         run: |
-          # Скачиваем последнюю версию kube-linter напрямую с GitHub Releases
           curl -L -o kube-linter https://github.com/stackrox/kube-linter/releases/latest/download/kube-linter-linux
           chmod +x kube-linter
-          
-          # Запускаем проверку. Если найдены ошибки, он вернет код 1 и упадет пайплайн
           ./kube-linter lint rendered-manifests.yaml
 
-      # 3. TRIVY: Сканирование конфигураций на CVE (также полностью Open Source)
       - name: Run Trivy config scan
         uses: aquasecurity/trivy-action@master
         with:
@@ -47,4 +57,3 @@ jobs:
           scan-ref: 'charts/nginx-app/'
           severity: 'CRITICAL,HIGH'
           exit-code: '1'
-# Force trigger new pipeline
