@@ -16,7 +16,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      # ДЕТЕКТОР ЛЖИ 1: Показываем, какой коммит мы реально проверяем
+
       - name: Show current commit
         run: |
           echo "Checking out commit: $(git rev-parse HEAD)"
@@ -35,7 +35,7 @@ jobs:
       - name: Render Helm templates
         run: helm template my-app charts/nginx-app > rendered-manifests.yaml
 
-      # ДЕТЕКТОР ЛЖИ 2: Показываем, что именно увидел Helm на сервере GitHub
+
       - name: Debug rendered manifests
         run: |
           echo "--- ПЕРВЫЕ 60 СТРОК RENDERED MANIFEST ---"
