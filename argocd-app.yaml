@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nginx-app
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Mkft1/k8s-gitops-demo.git
+    targetRevision: HEAD
+    path: charts/nginx-app
+    helm:
+      valueFiles:
+      - values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: production
+  syncPolicy:
+    automated:
+      prune: true   
+      selfHeal: true 
+    syncOptions:
+    - CreateNamespace=true
