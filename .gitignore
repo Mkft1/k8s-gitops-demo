@@ -1,1 +1,15 @@
 *.tar.gz
+
+# Binaries
+/kubeseal
+/kube-linter
+
+# Terraform (state содержит сертификаты кластера - НИКОГДА в Git!)
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+
+# Только зашифрованные секреты имеют право жить в Git
+secrets/*.plain.yaml
+*.pem
