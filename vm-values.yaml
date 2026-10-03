@@ -1,0 +1,59 @@
+alertmanager:
+  enabled: false
+
+vmalert:
+  enabled: false
+
+victoria-metrics-operator:
+  enabled: true
+
+vmcluster:
+  enabled: false
+vmsingle:
+  enabled: true
+  spec:
+    retentionPeriod: "7d"
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        memory: 512Mi
+
+grafana:
+  enabled: true
+  adminPassword: "admin123"
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+  # Включаем Loki как data source автоматически
+  additionalDataSources:
+    - name: Loki
+      type: loki
+      access: proxy
+      url: http://vm-stack-loki:3100
+      isDefault: false
+
+# Включаем Loki через отдельный чарт
+loki:
+  enabled: true
+  deploymentMode: SimpleScalable
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+
+# Promtail для сбора логов
+promtail:
+  enabled: true
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 128Mi
