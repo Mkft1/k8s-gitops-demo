@@ -13,3 +13,20 @@ crash.log
 # Только зашифрованные секреты имеют право жить в Git
 secrets/*.plain.yaml
 *.pem
+
+# Binaries
+kubeseal
+kube-linter
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+
+# SOPS
+secrets/*.plain.yaml
+*.pem
+
+# Rendered manifests
+rendered-manifests.yaml
