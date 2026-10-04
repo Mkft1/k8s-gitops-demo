@@ -3,6 +3,8 @@
 # Binaries
 /kubeseal
 /kube-linter
+kubeseal
+kube-linter
 
 # Terraform (state содержит сертификаты кластера - НИКОГДА в Git!)
 .terraform/
@@ -10,23 +12,24 @@
 *.tfstate.*
 crash.log
 
-# Только зашифрованные секреты имеют право жить в Git
+# Secrets
 secrets/*.plain.yaml
 *.pem
-
-# Binaries
-kubeseal
-kube-linter
-
-# Terraform
-.terraform/
-*.tfstate
-*.tfstate.*
-crash.log
-
-# SOPS
+secrets/
+!secrets/*.enc.yaml
+!secrets/*.enc.yml
 secrets/*.plain.yaml
-*.pem
+secrets/*.plain.yml
+secrets/*.decrypted.yaml
+secrets/*.decrypted.yml
+secrets/*.yaml
+!secrets/*.enc.yaml
+secrets/*.yml
+!secrets/*.enc.yml
+
+# Age ключи
+*.agekey
+age/
 
 # Rendered manifests
 rendered-manifests.yaml
