@@ -1,0 +1,27 @@
+alertmanager:
+  enabled: false
+vmalert:
+  enabled: false
+victoria-metrics-operator:
+  enabled: true
+vmcluster:
+  enabled: false
+vmsingle:
+  enabled: true
+  spec:
+    retentionPeriod: "7d"
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        memory: 512Mi
+grafana:
+  enabled: true
+  adminPassword: "admin123"
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
