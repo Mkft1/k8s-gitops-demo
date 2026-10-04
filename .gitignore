@@ -31,3 +31,8 @@ secrets/*.plain.yaml
 # Rendered manifests
 rendered-manifests.yaml
 age/keys.txt
+
+# Исключаем старые файлы инфраструктуры и конфиги
+terraform-old/
+vm-values.yaml
+.kube/
