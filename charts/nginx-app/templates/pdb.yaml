@@ -1,0 +1,13 @@
+{{- if gt (int .Values.replicaCount) 1 }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "nginx-app.fullname" . }}-pdb
+  labels:
+    app.kubernetes.io/name: {{ include "nginx-app.name" . }}
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "nginx-app.name" . }}
+{{- end }}
