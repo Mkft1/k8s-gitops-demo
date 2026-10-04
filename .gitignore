@@ -30,3 +30,4 @@ secrets/*.plain.yaml
 
 # Rendered manifests
 rendered-manifests.yaml
+age/keys.txt
