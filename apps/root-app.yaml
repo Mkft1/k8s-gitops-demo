@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: https://github.com/Mkft1/k8s-gitops-demo.git
     targetRevision: HEAD
-    path: .
+    path: apps  
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
