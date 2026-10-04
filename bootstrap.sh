@@ -1,25 +1,23 @@
 #!/bin/bash
-# Полный автоматический bootstrap кластера
+set -e # Останавливаем выполнение при любой ошибке
 
-set -e
+echo "Запуск полного bootstrap кластера..."
 
-echo "Bootstrap кластера..."
-
-# 1. Создать кластер через Terraform
+# 1. Создаем инфраструктуру через Terraform
+echo "1/3: Создание кластера Kind, Cilium и восстановление ключей Sealed Secrets..."
 cd terraform/environments/dev
-terraform init
+terraform init -input=false
 terraform apply -auto-approve
+cd ../../..
 
-# 2. Подождать готовности кластера
+# 2. Ждем, пока кластер стабилизируется и скрипт restore-secrets отработает
+echo "2/3: Ожидание готовности кластера (30 сек)..."
 sleep 30
 
-# 3. Установить ArgoCD
-helm repo add argo https://argoproj.github.io/argo-helm
-helm install argocd argo/argo-cd \
-  --namespace argocd --create-namespace \
-  -f ../../../argocd-values.yaml
+# 3. Применяем корневое ArgoCD приложение (App of Apps)
+echo "3/3: Применение корневого ArgoCD Application..."
+kubectl apply -f applications.yaml
 
-# 4. Применить root application
-kubectl apply -f ../../../applications.yaml
-
-echo "Bootstrap завершен"
+echo "Bootstrap успешно завершен"
+echo "Проверь статус всех приложений: kubectl get applications -n argocd"
+echo "Для доступа к Grafana: kubectl port-forward svc/vm-stack-grafana -n monitoring 3000:80"
