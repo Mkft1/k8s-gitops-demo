@@ -38,11 +38,24 @@ def get_rabbit_connection():
             logging.error(f"RabbitMQ connection failed: {e}. Retrying in 5s...")
             time.sleep(5)
 
+def publish_notification(ch, data):
+    ch.basic_publish(
+        exchange='',
+        routing_key='notifications_queue',
+        body=json.dumps({
+            "order_id": data['order_id'],
+            "item": data['item'],
+            "quantity": data['quantity'],
+            "status": "processed"
+        }),
+        properties=pika.BasicProperties(delivery_mode=2)
+    )
+
 def callback(ch, method, properties, body):
     try:
         data = json.loads(body)
         logging.info(f"Processing order: {data['order_id']}")
-        
+
         conn = get_db_connection()
         cur = conn.cursor()
         try:
@@ -52,13 +65,15 @@ def callback(ch, method, properties, body):
             )
             conn.commit()
             logging.info(f"Saved order {data['order_id']} to database")
+            publish_notification(ch, data)
+            logging.info(f"Published notification event for order {data['order_id']}")
         except Exception as e:
             logging.error(f"Database error: {e}")
             conn.rollback()
         finally:
             cur.close()
             conn.close()
-            
+
         ch.basic_ack(delivery_tag=method.delivery_tag)
     except Exception as e:
         logging.error(f"Error processing message: {e}")
@@ -69,9 +84,10 @@ def main():
     conn = get_rabbit_connection()
     channel = conn.channel()
     channel.queue_declare(queue='orders_queue', durable=True)
+    channel.queue_declare(queue='notifications_queue', durable=True)
     channel.basic_qos(prefetch_count=1)
     channel.basic_consume(queue='orders_queue', on_message_callback=callback)
-    
+
     logging.info("Waiting for messages. To exit press CTRL+C")
     channel.start_consuming()
 

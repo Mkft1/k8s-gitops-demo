@@ -1,7 +1,7 @@
 replicaCount: 1  # Для воркера часто достаточно 1 реплики, если нет дикой нагрузки
 image:
   repository: worker-service
-  tag: "v1"
+  tag: "v2"
   pullPolicy: IfNotPresent
 resources:
   limits:
