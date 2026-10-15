@@ -1,0 +1,49 @@
+name: Worker Service CI/CD
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'microservices/worker-service/**'
+      - 'charts/worker-service/**'
+      - '.github/workflows/worker-service-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    uses: ./.github/workflows/_build-and-push.yml
+    with:
+      service_name: worker-service
+      context: ./microservices/worker-service
+      dockerfile: ./microservices/worker-service/Dockerfile
+      chart_path: charts/worker-service
+
+  update-values:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Update image tag in values.yaml
+        run: |
+          NEW_TAG="${{ needs.build-and-push.outputs.image_tag }}"
+          echo "Updating worker-service to tag: $NEW_TAG"
+          
+          sed -i "s|repository: .*|repository: ghcr.io/${{ github.repository }}/worker-service|g" charts/worker-service/values.yaml
+          sed -i "s|tag: \".*\"|tag: \"${NEW_TAG}\"|g" charts/worker-service/values.yaml
+          sed -i "s|pullPolicy: .*|pullPolicy: Always|g" charts/worker-service/values.yaml
+          
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          if git diff --quiet charts/worker-service/values.yaml; then
+            echo "No changes detected"
+          else
+            git add charts/worker-service/values.yaml
+            git commit -m "chore: update worker-service image tag to ${NEW_TAG} [skip ci]"
+            git push
+          fi

@@ -1,0 +1,49 @@
+name: Notification Service CI/CD
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'microservices/notification-service/**'
+      - 'charts/notification-service/**'
+      - '.github/workflows/notification-service-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    uses: ./.github/workflows/_build-and-push.yml
+    with:
+      service_name: notification-service
+      context: ./microservices/notification-service
+      dockerfile: ./microservices/notification-service/Dockerfile
+      chart_path: charts/notification-service
+
+  update-values:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Update image tag in values.yaml
+        run: |
+          NEW_TAG="${{ needs.build-and-push.outputs.image_tag }}"
+          echo "Updating notification-service to tag: $NEW_TAG"
+          
+          sed -i "s|repository: .*|repository: ghcr.io/${{ github.repository }}/notification-service|g" charts/notification-service/values.yaml
+          sed -i "s|tag: \".*\"|tag: \"${NEW_TAG}\"|g" charts/notification-service/values.yaml
+          sed -i "s|pullPolicy: .*|pullPolicy: Always|g" charts/notification-service/values.yaml
+          
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          if git diff --quiet charts/notification-service/values.yaml; then
+            echo "No changes detected"
+          else
+            git add charts/notification-service/values.yaml
+            git commit -m "chore: update notification-service image tag to ${NEW_TAG} [skip ci]"
+            git push
+          fi

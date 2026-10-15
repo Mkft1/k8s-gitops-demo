@@ -1,9 +1,9 @@
 replicaCount: 2
 
 image:
-  repository: order-service
-  tag: "v2"
-  pullPolicy: IfNotPresent
+  repository: ghcr.io/mkft1/k8s-gitops-demo/order-service
+  tag: "latest"
+  pullPolicy: Always
 
 service:
   type: ClusterIP

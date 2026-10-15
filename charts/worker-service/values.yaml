@@ -1,8 +1,10 @@
-replicaCount: 1  # Для воркера часто достаточно 1 реплики, если нет дикой нагрузки
+replicaCount: 1
+
 image:
-  repository: worker-service
-  tag: "v2"
-  pullPolicy: IfNotPresent
+  repository: ghcr.io/mkft1/k8s-gitops-demo/worker-service
+  tag: "latest"
+  pullPolicy: Always
+
 resources:
   limits:
     cpu: 200m
@@ -10,12 +12,15 @@ resources:
   requests:
     cpu: 50m
     memory: 64Mi
+
 securityContext:
   runAsNonRoot: true
   runAsUser: 1000
   readOnlyRootFilesystem: true
   allowPrivilegeEscalation: false
+
 envFromSecret: app-credentials
+
 env:
   - name: RABBITMQ_HOST
     value: "rabbitmq"
