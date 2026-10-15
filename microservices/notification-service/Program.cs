@@ -13,6 +13,9 @@ builder.Host.UseSerilog((context, config) => config
     .Enrich.FromLogContext()
     .WriteTo.Console(new RenderedCompactJsonFormatter()));
 
+// Регистрация сервиса HealthChecks
+builder.Services.AddHealthChecks();
+
 builder.Services.AddHostedService<NotificationConsumer>();
 
 var app = builder.Build();
@@ -104,7 +107,6 @@ public sealed class NotificationConsumer : BackgroundService
                 var item = root.GetProperty("item").GetString();
                 var quantity = root.GetProperty("quantity").GetInt32();
 
-                // В реальной системе здесь была бы отправка через SMTP / Telegram / push-gateway
                 _logger.LogInformation(
                     "Notification sent: order_id={OrderId} item={Item} quantity={Quantity} channel=email",
                     orderId, item, quantity);
