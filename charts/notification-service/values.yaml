@@ -1,0 +1,44 @@
+replicaCount: 2
+
+image:
+  repository: notification-service
+  tag: "v1"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8000
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 192Mi
+  requests:
+    cpu: 50m
+    memory: 96Mi
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+
+affinity:
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+            - key: app.kubernetes.io/name
+              operator: In
+              values:
+                - notification-service
+        topologyKey: kubernetes.io/hostname
+
+envFromSecret: app-credentials
+
+env:
+  - name: RABBITMQ_HOST
+    value: "rabbitmq"
+  - name: RABBITMQ_PORT
+    value: "5672"

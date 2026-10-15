@@ -1,0 +1,5 @@
+apiVersion: v2
+name: notification-service
+description: .NET 8 consumer of order_processed events
+version: 0.1.0
+appVersion: "1.0"
