@@ -18,6 +18,13 @@ resources:
     cpu: 100m
     memory: 64Mi
 
+# Добавено HPA, потому что я устав
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+
 securityContext:
   runAsNonRoot: true
   runAsUser: 1000
@@ -26,14 +33,16 @@ securityContext:
 
 affinity:
   podAntiAffinity:
-    requiredDuringSchedulingIgnoredDuringExecution:
-      - labelSelector:
-          matchExpressions:
-            - key: app.kubernetes.io/name
-              operator: In
-              values:
-                - order-service
-        topologyKey: kubernetes.io/hostname
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - order-service
+          topologyKey: kubernetes.io/hostname
 
 envFromSecret: app-credentials
 
