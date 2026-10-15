@@ -18,26 +18,21 @@ locals {
 resource "kind_cluster" "this" {
   name            = var.cluster_name
   wait_for_ready  = true
-  kubeconfig_path = "~/.kube/config"
-  
-  lifecycle {
-    ignore_changes = [
-      kubeconfig_path,
-      node_image
-    ]
-  }
-  
+  kubeconfig_path = pathexpand("~/.kube/config")
+
   kind_config {
     kind        = "Cluster"
     api_version = "kind.x-k8s.io/v1alpha4"
+
     node {
       role = "control-plane"
       kubeadm_config_patches = [
-        "kind: InitConfiguration
-        nodeRegistration:
-          kubeletExtraArgs:
-            node-labels: \"ingress-ready=true\"
-        "
+        <<-EOT
+          kind: InitConfiguration
+          nodeRegistration:
+            kubeletExtraArgs:
+              node-labels: "ingress-ready=true"
+        EOT
       ]
       extra_port_mappings {
         container_port = 80
@@ -48,6 +43,7 @@ resource "kind_cluster" "this" {
         host_port      = 443
       }
     }
+
     dynamic "node" {
       for_each = local.worker_nodes
       content {
@@ -66,6 +62,7 @@ provider "helm" {
   }
 }
 
+# 1. Cilium (сеть)
 resource "helm_release" "cilium" {
   name       = "cilium"
   repository = "https://helm.cilium.io/"
@@ -74,6 +71,7 @@ resource "helm_release" "cilium" {
   wait       = true
   timeout    = 600
   depends_on = [kind_cluster.this]
+
   set {
     name  = "kubeProxyReplacement"
     value = "true"
@@ -85,5 +83,90 @@ resource "helm_release" "cilium" {
   set {
     name  = "operator.replicas"
     value = "1"
+  }
+}
+
+# 2. Sealed Secrets контроллер (нужен ДО ArgoCD, чтобы CRD был готов)
+resource "helm_release" "sealed_secrets" {
+  name       = "sealed-secrets"
+  repository = "https://bitnami-labs.github.io/sealed-secrets"
+  chart      = "sealed-secrets"
+  namespace  = "kube-system"
+  wait       = true
+  timeout    = 300
+  depends_on = [helm_release.cilium]
+
+  set {
+    name  = "fullnameOverride"
+    value = "sealed-secrets-controller"
+  }
+}
+
+# 3. ArgoCD (GitOps движок)
+resource "helm_release" "argocd" {
+  name             = "argocd"
+  repository       = "https://argoproj.github.io/argo-helm"
+  chart            = "argo-cd"
+  namespace        = "argocd"
+  create_namespace = true
+  wait             = true
+  timeout          = 600
+  depends_on       = [helm_release.sealed_secrets]
+
+  set {
+    name  = "server.service.type"
+    value = "ClusterIP"
+  }
+  set {
+    name  = "configs.params.server\\.insecure"
+    value = "true"
+  }
+  set {
+    name  = "dex.enabled"
+    value = "false"
+  }
+  set {
+    name  = "applicationSet.enabled"
+    value = "false"
+  }
+  set {
+    name  = "notifications.enabled"
+    value = "false"
+  }
+  set {
+    name  = "controller.resources.requests.cpu"
+    value = "100m"
+  }
+  set {
+    name  = "controller.resources.requests.memory"
+    value = "256Mi"
+  }
+  set {
+    name  = "controller.resources.limits.memory"
+    value = "512Mi"
+  }
+  set {
+    name  = "server.resources.requests.cpu"
+    value = "100m"
+  }
+  set {
+    name  = "server.resources.requests.memory"
+    value = "256Mi"
+  }
+  set {
+    name  = "server.resources.limits.memory"
+    value = "512Mi"
+  }
+  set {
+    name  = "repoServer.resources.requests.cpu"
+    value = "100m"
+  }
+  set {
+    name  = "repoServer.resources.requests.memory"
+    value = "256Mi"
+  }
+  set {
+    name  = "repoServer.resources.limits.memory"
+    value = "512Mi"
   }
 }

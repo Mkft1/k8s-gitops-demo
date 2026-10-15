@@ -1,2 +1,2 @@
 cluster_name = "kubernetes-learning"
-worker_count = 2
+worker_count = 3
