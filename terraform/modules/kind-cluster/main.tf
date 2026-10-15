@@ -19,24 +19,25 @@ resource "kind_cluster" "this" {
   name            = var.cluster_name
   wait_for_ready  = true
   kubeconfig_path = "~/.kube/config"
-
-  # ЗАПРЕЩАЕМ пересоздание кластера при изменении пути к конфиг или образа
+  
   lifecycle {
     ignore_changes = [
       kubeconfig_path,
-      node_image,
-      kind_config
+      node_image
     ]
   }
-
+  
   kind_config {
     kind        = "Cluster"
     api_version = "kind.x-k8s.io/v1alpha4"
-
     node {
       role = "control-plane"
       kubeadm_config_patches = [
-        "kind: InitConfiguration\nnodeRegistration:\n  kubeletExtraArgs:\n    node-labels: \"ingress-ready=true\"\n"
+        "kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: \"ingress-ready=true\"
+        "
       ]
       extra_port_mappings {
         container_port = 80
@@ -47,7 +48,6 @@ resource "kind_cluster" "this" {
         host_port      = 443
       }
     }
-
     dynamic "node" {
       for_each = local.worker_nodes
       content {
@@ -73,9 +73,7 @@ resource "helm_release" "cilium" {
   namespace  = "kube-system"
   wait       = true
   timeout    = 600
-
   depends_on = [kind_cluster.this]
-
   set {
     name  = "kubeProxyReplacement"
     value = "true"
