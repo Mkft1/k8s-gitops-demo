@@ -1,0 +1,5 @@
+apiVersion: v2
+name: order-service
+description: FastAPI Order Service for processing orders and publishing to RabbitMQ
+version: 0.1.0
+appVersion: "1.0"
