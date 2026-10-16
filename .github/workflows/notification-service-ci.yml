@@ -33,7 +33,7 @@ jobs:
           NEW_TAG="${{ needs.build-and-push.outputs.image_tag }}"
           echo "Updating notification-service to tag: $NEW_TAG"
           
-          sed -i "s|repository: .*|repository: ghcr.io/${{ github.repository }}/notification-service|g" charts/notification-service/values.yaml
+          sed -i "s|repository: .*|repository: ghcr.io/mkft1/k8s-gitops-demo/notification-service|g" charts/notification-service/values.yaml
           sed -i "s|tag: \".*\"|tag: \"${NEW_TAG}\"|g" charts/notification-service/values.yaml
           sed -i "s|pullPolicy: .*|pullPolicy: Always|g" charts/notification-service/values.yaml
           

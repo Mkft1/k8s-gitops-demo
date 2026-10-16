@@ -33,7 +33,7 @@ jobs:
           NEW_TAG="${{ needs.build-and-push.outputs.image_tag }}"
           echo "Updating worker-service to tag: $NEW_TAG"
           
-          sed -i "s|repository: .*|repository: ghcr.io/${{ github.repository }}/worker-service|g" charts/worker-service/values.yaml
+          sed -i "s|repository: .*|repository: ghcr.io/mkft1/k8s-gitops-demo/worker-service|g" charts/worker-service/values.yaml
           sed -i "s|tag: \".*\"|tag: \"${NEW_TAG}\"|g" charts/worker-service/values.yaml
           sed -i "s|pullPolicy: .*|pullPolicy: Always|g" charts/worker-service/values.yaml
           
