@@ -43,8 +43,8 @@ jobs:
     
     env:
       REGISTRY: ghcr.io
-      # ИСПРАВЛЕНИЕ: принудительно переводим в lowercase
-      IMAGE_NAME: ${{ github.repository_owner }}/${{ github.event.repository.name }}/${{ inputs.service_name }}
+      # LOWERCASE
+      IMAGE_NAME: mkft1/k8s-gitops-demo/${{ inputs.service_name }}
     
     steps:
       - name: Checkout repository
@@ -83,7 +83,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ github.event.repository.name }}/${{ inputs.service_name }}
+          images: ${{ env.REGISTRY }}/mkft1/k8s-gitops-demo/${{ inputs.service_name }}
           tags: |
             type=sha,prefix=,format=short
       
@@ -103,7 +103,7 @@ jobs:
         run: |
           cosign sign --yes \
             --rekor-url https://rekor.sigstore.dev \
-            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ github.event.repository.name }}/${{ inputs.service_name }}@${{ steps.build.outputs.digest }}
+            ${{ env.REGISTRY }}/mkft1/k8s-gitops-demo/${{ inputs.service_name }}@${{ steps.build.outputs.digest }}
         env:
           COSIGN_EXPERIMENTAL: 1
         continue-on-error: true
@@ -111,7 +111,7 @@ jobs:
       - name: Run Trivy image scan
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ github.event.repository.name }}/${{ inputs.service_name }}:${{ steps.meta.outputs.version }}
+          image-ref: ${{ env.REGISTRY }}/mkft1/k8s-gitops-demo/${{ inputs.service_name }}:${{ steps.meta.outputs.version }}
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
