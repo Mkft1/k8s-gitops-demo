@@ -2,7 +2,7 @@ replicaCount: 2
 
 image:
   repository: ghcr.io/mkft1/k8s-gitops-demo/order-service
-  tag: "latest"
+  tag: "v1.0.0"  # ВРЕМЕННО: конкретный тег вместо latest
   pullPolicy: Always
 
 service:
@@ -18,7 +18,6 @@ resources:
     cpu: 100m
     memory: 64Mi
 
-# Добавено HPA, потому что я устав
 autoscaling:
   enabled: true
   minReplicas: 2
