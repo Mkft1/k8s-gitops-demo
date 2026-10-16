@@ -1,0 +1,40 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-cosign-signature
+  annotations:
+    policies.kyverno.io/title: Require Cosign Signature
+    policies.kyverno.io/category: Software Supply Chain Security
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      All Pods must use images that have been signed by Cosign.
+      This ensures that only images built and signed by our trusted CI/CD pipeline can run in the cluster.
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: check-image
+      match:
+        any:
+        - resources:
+            kinds:
+              - Pod
+      exclude:
+        any:
+        - resources:
+            namespaces:
+              - kube-system
+              - kyverno
+              - argocd
+      verifyImages:
+      - imageReferences:
+        - "ghcr.io/mkft1/k8s-gitops-demo/*"
+        mutateDigest: true
+        required: true
+        attestors:
+        - count: 1
+          entries:
+          - keyless:
+              subject: "https://github.com/Mkft1/k8s-gitops-demo/.github/workflows/_build-and-push.yml@refs/heads/main"
+              issuer: "https://token.actions.githubusercontent.com"
