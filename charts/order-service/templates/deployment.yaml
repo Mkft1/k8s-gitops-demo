@@ -4,18 +4,21 @@ metadata:
   name: {{ include "order-service.fullname" . }}
   labels:
     app.kubernetes.io/name: {{ include "order-service.name" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
 spec:
   replicas: {{ .Values.replicaCount }}
+  # ЯВНАЯ СТРАТЕГИЯ ZERO-DOWNTIME
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ include "order-service.name" . }}
-      app.kubernetes.io/instance: {{ .Release.Name }}
   template:
     metadata:
       labels:
         app.kubernetes.io/name: {{ include "order-service.name" . }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
       securityContext:
         runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
@@ -53,7 +56,7 @@ spec:
               path: /health
               port: http
             initialDelaySeconds: 5
-            periodSeconds: 10
+            periodSeconds: 5
           volumeMounts:
             - name: tmp
               mountPath: /tmp
