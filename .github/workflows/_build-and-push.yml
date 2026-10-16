@@ -12,9 +12,10 @@ on:
         required: true
         type: string
       dockerfile:
-        description: 'Path to Dockerfile'
-        required: true
+        description: 'Dockerfile name'
+        required: false
         type: string
+        default: 'Dockerfile'
       chart_path:
         description: 'Path to Helm chart'
         required: true
@@ -85,16 +86,16 @@ jobs:
           tags: |
             type=sha,prefix=,format=short
       
-      # Убираем проблемное кэширование buildx
       - name: Build and push Docker image
         id: build
         uses: docker/build-push-action@v5
         with:
+          # указываем папку сервиса как контекст
           context: ${{ inputs.context }}
-          file: ${{ inputs.dockerfile }}
+          # собираем полный путь к Dockerfile (контекст + имя файла)
+          file: ${{ inputs.context }}/${{ inputs.dockerfile }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
-          # Кэширование слоев Docker будет работать автоматически
       
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3.5.0

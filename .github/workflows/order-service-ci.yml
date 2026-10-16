@@ -15,8 +15,8 @@ jobs:
     uses: ./.github/workflows/_build-and-push.yml
     with:
       service_name: order-service
-      context: .  # используем корень репозитория
-      dockerfile: ./microservices/order-service/Dockerfile  # полный путь от корня
+      context: ./microservices/order-service  # Контекст - папка сервиса
+      dockerfile: Dockerfile                  # Имя файла (по умолчанию)
       chart_path: charts/order-service
 
   update-values:
