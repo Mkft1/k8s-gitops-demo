@@ -43,7 +43,8 @@ jobs:
     
     env:
       REGISTRY: ghcr.io
-      IMAGE_NAME: ${{ github.repository }}/${{ inputs.service_name }}
+      # ИСПРАВЛЕНИЕ: принудительно переводим в lowercase
+      IMAGE_NAME: ${{ github.repository_owner }}/${{ github.event.repository.name }}/${{ inputs.service_name }}
     
     steps:
       - name: Checkout repository
@@ -82,7 +83,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ github.event.repository.name }}/${{ inputs.service_name }}
           tags: |
             type=sha,prefix=,format=short
       
@@ -90,9 +91,7 @@ jobs:
         id: build
         uses: docker/build-push-action@v5
         with:
-          # указываем папку сервиса как контекст
           context: ${{ inputs.context }}
-          # собираем полный путь к Dockerfile (контекст + имя файла)
           file: ${{ inputs.context }}/${{ inputs.dockerfile }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
@@ -104,7 +103,7 @@ jobs:
         run: |
           cosign sign --yes \
             --rekor-url https://rekor.sigstore.dev \
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ github.event.repository.name }}/${{ inputs.service_name }}@${{ steps.build.outputs.digest }}
         env:
           COSIGN_EXPERIMENTAL: 1
         continue-on-error: true
@@ -112,7 +111,7 @@ jobs:
       - name: Run Trivy image scan
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+          image-ref: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ github.event.repository.name }}/${{ inputs.service_name }}:${{ steps.meta.outputs.version }}
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
