@@ -15,8 +15,8 @@ jobs:
     uses: ./.github/workflows/_build-and-push.yml
     with:
       service_name: order-service
-      context: ./microservices/order-service  # Контекст - папка сервиса
-      dockerfile: Dockerfile                  # Имя файла (по умолчанию)
+      context: ./microservices/order-service
+      dockerfile: Dockerfile
       chart_path: charts/order-service
 
   update-values:
@@ -34,7 +34,8 @@ jobs:
           NEW_TAG="${{ needs.build-and-push.outputs.image_tag }}"
           echo "Updating order-service to tag: $NEW_TAG"
           
-          sed -i "s|repository: .*|repository: ghcr.io/${{ github.repository }}/order-service|g" charts/order-service/values.yaml
+          # задаем lowercase 'mkft1' вместо переменной github.repository
+          sed -i "s|repository: .*|repository: ghcr.io/mkft1/k8s-gitops-demo/order-service|g" charts/order-service/values.yaml
           sed -i "s|tag: \".*\"|tag: \"${NEW_TAG}\"|g" charts/order-service/values.yaml
           sed -i "s|pullPolicy: .*|pullPolicy: Always|g" charts/order-service/values.yaml
           
