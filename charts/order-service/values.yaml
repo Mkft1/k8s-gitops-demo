@@ -1,8 +1,8 @@
 replicaCount: 2
 
 image:
-  repository: ghcr.io/Mkft1/k8s-gitops-demo/order-service
-  tag: "382f7e3"  # ВРЕМЕННО: конкретный тег вместо latest
+  repository: ghcr.io/mkft1/k8s-gitops-demo/order-service
+  tag: "c7d3088"  # ВРЕМЕННО: конкретный тег вместо latest
   pullPolicy: Always
 
 service:
