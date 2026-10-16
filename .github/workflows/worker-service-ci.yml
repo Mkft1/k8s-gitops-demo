@@ -16,7 +16,7 @@ jobs:
     with:
       service_name: worker-service
       context: ./microservices/worker-service
-      dockerfile: Dockerfile  # <-- ТОЛЬКО ИМЯ ФАЙЛА, без пути
+      dockerfile: Dockerfile
       chart_path: charts/worker-service
 
   update-values:
@@ -40,6 +40,8 @@ jobs:
           
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git pull --rebase origin main || true
           
           if git diff --quiet charts/worker-service/values.yaml; then
             echo "No changes detected"
