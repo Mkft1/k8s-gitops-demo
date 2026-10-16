@@ -39,3 +39,48 @@ age/keys.txt
 terraform-old/
 vm-values.yaml
 .kube/
+# Terraform
+*.tfstate
+*.tfstate.*
+*.tfplan
+.terraform/
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Secrets & Crypto
+*.pem
+*.key
+*.age
+*.sops.yaml
+secrets/unencrypted/
+infrastructure/sealed-secrets-cert.pem
+
+# OS & IDE
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# C# / .NET
+bin/
+obj/
+*.user
+*.suo
+
+# Docker & Local Kind
+kind-config.yaml
+rendered-manifests.yaml
+kube-linter
+trivy-results.sarif
+
+# Logs
+*.log
