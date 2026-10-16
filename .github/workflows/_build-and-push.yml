@@ -85,6 +85,7 @@ jobs:
           tags: |
             type=sha,prefix=,format=short
       
+      # Убираем проблемное кэширование buildx
       - name: Build and push Docker image
         id: build
         uses: docker/build-push-action@v5
@@ -93,8 +94,7 @@ jobs:
           file: ${{ inputs.dockerfile }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # Кэширование слоев Docker будет работать автоматически
       
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3.5.0
