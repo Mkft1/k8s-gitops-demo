@@ -1,0 +1,13 @@
+{{- if .Values.autoscaling.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "order-service.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "order-service.name" . }}
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "order-service.name" . }}
+{{- end }}
