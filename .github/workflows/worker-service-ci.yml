@@ -7,6 +7,7 @@ on:
       - 'microservices/worker-service/**'
       - 'charts/worker-service/**'
       - '.github/workflows/worker-service-ci.yml'
+      - '.github/workflows/_build-and-push.yml'
   workflow_dispatch:
 
 jobs:
@@ -15,7 +16,7 @@ jobs:
     with:
       service_name: worker-service
       context: ./microservices/worker-service
-      dockerfile: ./microservices/worker-service/Dockerfile
+      dockerfile: Dockerfile  # <-- ТОЛЬКО ИМЯ ФАЙЛА, без пути
       chart_path: charts/worker-service
 
   update-values:
