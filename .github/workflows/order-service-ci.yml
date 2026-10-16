@@ -7,6 +7,7 @@ on:
       - 'microservices/order-service/**'
       - 'charts/order-service/**'
       - '.github/workflows/order-service-ci.yml'
+      - '.github/workflows/_build-and-push.yml'
   workflow_dispatch:
 
 jobs:
@@ -14,8 +15,8 @@ jobs:
     uses: ./.github/workflows/_build-and-push.yml
     with:
       service_name: order-service
-      context: ./microservices/order-service
-      dockerfile: ./microservices/order-service/Dockerfile
+      context: .  # используем корень репозитория
+      dockerfile: ./microservices/order-service/Dockerfile  # полный путь от корня
       chart_path: charts/order-service
 
   update-values:
@@ -33,7 +34,6 @@ jobs:
           NEW_TAG="${{ needs.build-and-push.outputs.image_tag }}"
           echo "Updating order-service to tag: $NEW_TAG"
           
-          # Обновляем repository и tag в values.yaml
           sed -i "s|repository: .*|repository: ghcr.io/${{ github.repository }}/order-service|g" charts/order-service/values.yaml
           sed -i "s|tag: \".*\"|tag: \"${NEW_TAG}\"|g" charts/order-service/values.yaml
           sed -i "s|pullPolicy: .*|pullPolicy: Always|g" charts/order-service/values.yaml
