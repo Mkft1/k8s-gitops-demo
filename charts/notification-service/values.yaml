@@ -2,7 +2,7 @@ replicaCount: 2
 
 image:
   repository: ghcr.io/mkft1/k8s-gitops-demo/notification-service
-  tag: "v1.0.0"
+  tag: "6f9c5a0"
   pullPolicy: Always
 
 service:
